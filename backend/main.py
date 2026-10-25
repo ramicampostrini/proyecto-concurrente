@@ -43,8 +43,11 @@ class TaskRequest(BaseModel):
 
 
 
+
 def process_task(task_id: str):
-    """Ejecuta tres trabajos concurrentes y guarda los resultados en Firestore."""
+    """Ejecuta tareas con modelos locales de Ollama y guarda los resultados."""
+
+    import ollama
 
     referencia = tasks_collection.document(task_id)
     documento = referencia.get()
@@ -58,23 +61,36 @@ def process_task(task_id: str):
     referencia.update({"status": "procesando"})
     start = perf_counter()
 
+    results = {}
+    errors = {}
+
     def summarize():
-        return f"Resumen de prueba: {text_value[:150]}"
+        response = ollama.generate(
+            model="llama3.2:1b",
+            prompt=(
+                "Resumí el siguiente texto en español, de forma clara "
+                "y breve:\n\n" + text_value
+            ),
+        )
+        return response["response"]
 
     def generate_code():
-        return "# Código de ejemplo\ndef procesar():\n    return 'OK'"
+        response = ollama.generate(
+            model="qwen2.5-coder:1.5b",
+            prompt=(
+                "Analizá el siguiente requerimiento y generá una solución "
+                "en Python. Incluí código claro y comentarios útiles. "
+                "Devolvé solamente el código y no inventes requisitos.\n\n"
+                "Requerimiento:\n" + text_value
+            ),
+        )
+        return response["response"]
 
-    def review():
-        return "Revisión de prueba: tarea recibida correctamente."
-
+    # Fase 1: resumen y generación de código en paralelo.
     jobs = {
         "resumen": summarize,
         "codigo": generate_code,
-        "revision": review,
     }
-
-    results = {}
-    errors = {}
 
     futures = {
         executor.submit(function): name
@@ -87,6 +103,30 @@ def process_task(task_id: str):
             results[name] = future.result()
         except Exception as exc:
             errors[name] = str(exc)
+
+    # Fase 2: el revisor analiza el código generado.
+    if "codigo" in results:
+        try:
+            response = ollama.generate(
+                model="mistral:7b",
+                prompt=(
+                    "Actuá como revisor de código Python. "
+                    "Analizá el código, señalá errores potenciales, "
+                    "problemas de seguridad y mejoras posibles. "
+                    "No afirmes haber ejecutado el código.\n\n"
+                    "Requerimiento original:\n"
+                    + text_value
+                    + "\n\nCódigo a revisar:\n"
+                    + results["codigo"]
+                ),
+            )
+            results["revision"] = response["response"]
+        except Exception as exc:
+            errors["revision"] = str(exc)
+    else:
+        errors["revision"] = (
+            "No se pudo revisar el código porque falló su generación."
+        )
 
     elapsed = round(perf_counter() - start, 3)
 

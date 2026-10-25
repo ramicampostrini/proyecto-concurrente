@@ -36,7 +36,7 @@ function App() {
   }
 
   async function checkTask(id) {
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0; i < 300; i++) {
       const response = await fetch(`${API}/tasks/${id}`);
 
       if (!response.ok) {
