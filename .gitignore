@@ -1,0 +1,30 @@
+# Claves privadas de Firebase (NUNCA subirlas a GitHub)
+backend/serviceAccountKey.json
+**/serviceAccountKey.json
+*.json.key
+
+# Entorno virtual de Python
+backend/.venv/
+backend/venv/
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Dependencias y compilados de Node/React
+frontend/node_modules/
+frontend/dist/
+
+# Variables de entorno reales
+.env
+.env.*
+!.env.example
+
+# Archivos del editor y del sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

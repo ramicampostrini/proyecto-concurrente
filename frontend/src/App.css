@@ -1,0 +1,63 @@
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f3f5f9;
+  color: #202938;
+}
+
+.container {
+  width: min(900px, 92%);
+  margin: 40px auto;
+}
+
+form, article {
+  background: white;
+  border: 1px solid #dce2eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+textarea {
+  width: 100%;
+  min-height: 130px;
+  padding: 12px;
+  font: inherit;
+  resize: vertical;
+}
+
+button {
+  margin-top: 12px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #2459d3;
+  color: white;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.error {
+  color: #b42318;
+}
+
