@@ -2,7 +2,7 @@
 
 Proyecto académico con frontend React, backend FastAPI, persistencia en Firebase Firestore y modelos locales mediante Ollama.
 
-> Estado actual: FastAPI y la persistencia de tareas en Firestore ya fueron probadas. Los trabajos `resumen`, `codigo` y `revision` todavía son simulaciones; falta conectarlos a modelos de IA reales.
+> Estado actual: FastAPI y la persistencia de tareas en Firestore ya fueron probadas. Los trabajos `resumen`, `codigo` y `revision` todavía estan verde porque estan conectados a modelos de IA reales pero falta optimizacion.
 
 ## Requisitos
 
