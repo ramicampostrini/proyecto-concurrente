@@ -29,40 +29,45 @@ function App() {
       const data = await response.json();
       await checkTask(data.id);
     } catch (err) {
-      setError(err.message);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Ocurrió un error inesperado"
+        );
     } finally {
       setLoading(false);
     }
   }
 
   async function checkTask(id) {
-    for (let i = 0; i < 300; i++) {
+    for (let i = 0; i < 60; i++) {
       const response = await fetch(`${API}/tasks/${id}`);
-
+  
       if (!response.ok) {
-        throw new Error("No se pudo consultar la tarea");
+        throw new Error("No se pudo consultar el estado de la tarea");
       }
-
+  
       const data = await response.json();
       setTask(data);
-
+  
       if (
         data.status === "completada" ||
         data.status === "con errores"
       ) {
         return;
       }
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+  
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
-
-    throw new Error("La consulta superó los dos minutos");
+  
+    throw new Error(
+      "La consulta superó los cinco minutos. La tarea podría seguir procesándose."
+    );
   }
-
   return (
     <main className="container">
-      <h1>Procesador Concurrente con IA</h1>
-      <p>Enviá un texto y observá cómo se procesan tres tareas.</p>
+      <h1>Sistema Multiagente de generacion y analisis de codigo</h1>
+      <p>Enviá un texto pidiendo un codigo y observá cómo se procesan tres tareas.(Resumen de como seria el codigo,El codigo generado por una ia base y el analisis exhaustivo de un modelo un poco mas avanzado.)</p>
 
       <form onSubmit={submitTask}>
         <label htmlFor="text">Texto a procesar</label>
@@ -92,12 +97,34 @@ function App() {
             <p>Tiempo total: {task.elapsed_seconds} segundos</p>
           )}
 
-          {Object.entries(task.results || {}).map(([name, result]) => (
-            <article key={name}>
-              <h3>{name}</h3>
-              <pre>{result}</pre>
-            </article>
-          ))}
+
+            {Object.entries(task.resultados_parciales || task.results || {}).map(([name, result]) => (
+              <article key={name}>
+                <h3>
+                    {name === "resumen"
+                      ? "Resumen (Llama 3.2)"
+                      : name === "codigo"
+                      ? "Código generado (Qwen 2.5 Coder)"
+                      : name === "revision"
+                      ? "Revisión (Mistral 7B)"
+                      : name}
+                </h3>
+                <pre>{result}</pre>
+              </article>
+            ))}
+          <h2>Tiempos de ejecución</h2>
+          {task.agent_elapsed_seconds &&
+            Object.entries(task.agent_elapsed_seconds).map(([name, seconds]) => (
+              <p key={name}>
+                Tiempo de {name === "resumen"
+                      ? "Llama 3.2 (resumen)"
+                      : name === "codigo"
+                      ? "Qwen 2.5 Coder (generación de código)"
+                      : name === "revision"
+                      ? "Mistral 7B (revisión)"
+                      : name}: {seconds} segundos
+              </p>
+            ))}
 
           {Object.entries(task.errors || {}).map(([name, message]) => (
             <article key={name} className="error">

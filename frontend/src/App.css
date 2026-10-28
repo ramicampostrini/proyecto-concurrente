@@ -6,8 +6,8 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #f3f5f9;
-  color: #202938;
+  background: #e9edf5;
+  color: #243247;
 }
 
 .container {
@@ -15,18 +15,43 @@ body {
   margin: 40px auto;
 }
 
-form, article {
-  background: white;
-  border: 1px solid #dce2eb;
+h1 {
+  color: #17376b;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.2;
+  margin-bottom: 20px;
+}
+
+h2 {
+  color: #17376b;
+  margin-top: 24px;
+}
+
+h3 {
+  color: #2459a9;
+}
+
+.container > p {
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+form,
+article {
+  background: #ffffff;
+  color: #243247;
+  border: 1px solid #cbd5e1;
   border-radius: 12px;
   padding: 20px;
   margin: 20px 0;
+  box-shadow: 0 3px 10px rgba(23, 55, 107, 0.07);
 }
 
 label {
   display: block;
   margin-bottom: 10px;
   font-weight: bold;
+  color: #17376b;
 }
 
 textarea {
@@ -34,7 +59,16 @@ textarea {
   min-height: 130px;
   padding: 12px;
   font: inherit;
+  color: #243247;
+  background: #ffffff;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
   resize: vertical;
+}
+
+textarea:focus {
+  outline: 2px solid #2459d3;
+  outline-offset: 2px;
 }
 
 button {
@@ -43,8 +77,13 @@ button {
   border: 0;
   border-radius: 8px;
   background: #2459d3;
-  color: white;
+  color: #ffffff;
+  font-weight: bold;
   cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: #173fa5;
 }
 
 button:disabled {
@@ -55,9 +94,30 @@ button:disabled {
 pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  color: #243247;
+  background: #f1f5f9;
+  padding: 14px;
+  border-radius: 8px;
+  overflow-x: auto;
 }
 
 .error {
-  color: #b42318;
+  color: #b91c1c;
+}
+
+section > p {
+  overflow-wrap: anywhere;
+  margin: 10px 0;
+}
+
+@media (max-width: 600px) {
+  .container {
+    margin: 20px auto;
+  }
+
+  form,
+  article {
+    padding: 14px;
+  }
 }
 
