@@ -74,7 +74,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Sistema Concurrente con IA",
+    title="Sistema Multiagente de generacion y analisis de codigo",
     lifespan=lifespan,
 )
 
