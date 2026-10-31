@@ -319,6 +319,98 @@ def process_task(task_id: str):
 # 6. ENDPOINTS
 # --------------------------------------------------
 
+
+@app.get("/stats")
+def get_stats():
+    try:
+        documentos = tasks_collection.stream()
+
+        total_tareas = 0
+        completadas = 0
+        con_errores = 0
+        pendientes = 0
+        procesando = 0
+
+        tiempos = []
+
+        # Acumuladores de tiempos individuales
+        tiempos_agentes = {
+            "resumen": [],
+            "codigo": [],
+            "revision": [],
+        }
+
+        for documento in documentos:
+            tarea = documento.to_dict() or {}
+
+            total_tareas += 1
+            estado = tarea.get("status")
+
+            if estado == "completada":
+                completadas += 1
+            elif estado == "con errores":
+                con_errores += 1
+            elif estado == "pendiente":
+                pendientes += 1
+            elif estado == "procesando":
+                procesando += 1
+
+            # Tiempo total de la tarea
+            tiempo = tarea.get("elapsed_seconds")
+
+            if (
+                isinstance(tiempo, (int, float))
+                and not isinstance(tiempo, bool)
+                and tiempo >= 0
+            ):
+                tiempos.append(tiempo)
+
+            # Tiempos individuales de los agentes
+            agentes = tarea.get("agent_elapsed_seconds") or {}
+
+            for nombre in tiempos_agentes:
+                duracion = agentes.get(nombre)
+
+                if (
+                    isinstance(duracion, (int, float))
+                    and not isinstance(duracion, bool)
+                    and duracion >= 0
+                ):
+                    tiempos_agentes[nombre].append(duracion)
+
+        tiempo_promedio = (
+            round(sum(tiempos) / len(tiempos), 2)
+            if tiempos
+            else 0
+        )
+
+        promedios_agentes = {
+            nombre: (
+                round(sum(duraciones) / len(duraciones), 2)
+                if duraciones
+                else 0
+            )
+            for nombre, duraciones in tiempos_agentes.items()
+        }
+
+        return {
+            "total_tareas": total_tareas,
+            "completadas": completadas,
+            "con_errores": con_errores,
+            "pendientes": pendientes,
+            "procesando": procesando,
+            "tiempo_promedio": tiempo_promedio,
+            "tiempos_promedio_agentes": promedios_agentes,
+        }
+
+    except Exception as exc:
+        logger.exception("Error calculando las estadísticas")
+
+        raise HTTPException(
+            status_code=500,
+            detail="No se pudieron calcular las estadísticas",
+        ) from exc
+
 @app.get("/")
 def home():
     return {"message": "API concurrente funcionando"}

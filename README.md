@@ -1,50 +1,103 @@
-# Proyecto Concurrente con IA
+# Sistema Concurrente Multiagente con Inteligencia Artificial
 
-Proyecto académico con frontend React, backend FastAPI, persistencia en Firebase Firestore y modelos locales mediante Ollama.
+Sistema desarrollado como proyecto académico para aplicar **concurrencia y procesamiento paralelo** mediante múltiples agentes de inteligencia artificial. Cuenta con una interfaz web, una API backend, persistencia en la nube y modelos de lenguaje ejecutados localmente.
 
-> Estado actual: FastAPI y la persistencia de tareas en Firestore ya fueron probadas. Los trabajos `resumen`, `codigo` y `revision` todavía estan verde porque estan conectados a modelos de IA reales pero falta optimizacion.
+El sistema permite enviar una tarea y distribuir su procesamiento entre distintos agentes especializados, coordinando su ejecución y almacenando los resultados.
+
+## Características principales
+
+- **Procesamiento concurrente:** ejecución paralela de agentes mediante `ThreadPoolExecutor`.
+- **Arquitectura multiagente:** cada modelo cumple una función específica.
+- **Inteligencia artificial local:** integración con modelos ejecutados mediante Ollama.
+- **Persistencia de datos:** almacenamiento de tareas y resultados en Firebase Firestore.
+- **Dashboard web:** visualización del estado de las tareas, resultados y estadísticas.
+- **Métricas de rendimiento:** indicadores de tiempos de ejecución, velocidad relativa y eficiencia paralela estimada.
+
+## Arquitectura del sistema
+
+El proyecto está dividido en dos componentes principales:
+
+- **Frontend:** interfaz desarrollada con React y Vite.
+- **Backend:** API desarrollada con Python y FastAPI.
+
+El backend coordina los agentes de IA, administra la ejecución de las tareas y almacena la información en Firestore.
+
+## Agentes de inteligencia artificial
+
+El sistema utiliza tres modelos especializados:
+
+| Agente | Modelo | Responsabilidad |
+| Resumen | `llama3.2:1b` | Generar un resumen del contenido recibido. |
+| Código | `qwen2.5-coder:1.5b` | Analizar y generar soluciones relacionadas con código. |
+| Revisión | `mistral:7b` | Revisar los resultados y aportar observaciones. |
+
+Los agentes de resumen y código se ejecutan concurrentemente. Posteriormente, el agente de revisión procesa los resultados.
+
+## Tecnologías utilizadas
+
+| Área | Tecnología |
+| Lenguaje backend | Python |
+| API | FastAPI |
+| Concurrencia | ThreadPoolExecutor |
+| Sincronización | Lock |
+| Tareas en segundo plano | BackgroundTasks |
+| Frontend | React |
+| Herramienta de desarrollo frontend | Vite |
+| Gráficos | Recharts |
+| Base de datos | Firebase Firestore |
+| Modelos de IA | Ollama |
+| Control de versiones | Git y GitHub |
 
 ## Requisitos
 
+Antes de ejecutar el proyecto, es necesario contar con:
+
 - Python 3.13 recomendado para el entorno probado.
-- Node.js y npm para el frontend.
-- Ollama instalado para ejecutar modelos de IA localmente.
+- Node.js(version con la seguridad adecuada) y npm.
+- Ollama instalado.
 - Acceso autorizado al proyecto Firebase/Firestore.
+- Git para clonar el repositorio.
 
-## Backend (Windows / PowerShell)
+## Instalación y configuración
 
-Desde la carpeta del proyecto:
+### 1. Clonar el repositorio
+
+```bash
+git clone URL_DEL_REPOSITORIO
+cd proyecto-concurrente
+```
+
+Reemplazá `URL_DEL_REPOSITORIO` por la dirección real del repositorio.
+
+### 2. Configurar el backend
+
+Abrir la carpeta del proyecto en Visual Studio Code. Si el entorno virtual `.venv` está configurado y seleccionado como intérprete de Python, VS Code puede activarlo automáticamente al abrir una terminal.
+
+Instalar las dependencias desde la terminal integrada:
 
 ```powershell
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 ```
+Si VS Code no activa automáticamente el entorno virtual, seleccionar el intérprete de Python correspondiente a `backend/.venv` desde la paleta de comandos (`Python: Select Interpreter`) y abrir una nueva terminal.
+### 3. Configurar Firebase
 
-### Credenciales de Firebase
+El backend utiliza Firebase Admin SDK para conectarse a Firestore.
 
-El backend actual espera el archivo de cuenta de servicio en:
+Se requiere un archivo de credenciales de cuenta de servicio ubicado en:
 
-`backend/serviceAccountKey.json`
-
-Cada integrante que ejecute el backend localmente debe obtener credenciales de forma segura y autorizada para el proyecto Firebase. No envíen el archivo por GitHub, chat grupal ni lo agreguen al repositorio. El archivo está excluido en `.gitignore`.
-
-Para iniciar la API, desde `backend`:
-
-```powershell
-python -m uvicorn main:app --reload
+```text
+backend/serviceAccountKey.json
 ```
 
-La documentación interactiva estará en:
+Cada integrante debe obtener sus credenciales de manera segura y autorizada para el proyecto Firebase correspondiente.
 
-http://127.0.0.1:8000/docs
+**Importante:** este archivo contiene información privada y no debe subirse al repositorio ni compartirse públicamente.
 
-## Ollama
+### 4. Instalar y configurar Ollama
 
-Instalá Ollama en cada PC que vaya a ejecutar los modelos. Los modelos se descargan por separado; tener instalada la biblioteca Python `ollama` no los descarga automáticamente.
+Instalar Ollama en el equipo donde se ejecutarán los modelos.
 
-Modelos previstos:
+Descargar los modelos necesarios:
 
 ```powershell
 ollama pull llama3.2:1b
@@ -52,17 +105,33 @@ ollama pull qwen2.5-coder:1.5b
 ollama pull mistral:7b
 ```
 
-Comprobar los modelos locales:
+Verificar que estén disponibles:
 
 ```powershell
 ollama list
 ```
 
-Si PowerShell no reconoce `ollama`, puede ser necesario usar la ruta completa del ejecutable de Ollama o corregir el PATH.
+Los modelos se descargan localmente y deben estar disponibles para que el backend pueda utilizarlos.
 
-## Frontend
+### 5. Iniciar el backend
 
-Desde otra terminal:
+Desde la carpeta `backend`, con el entorno virtual activado:
+
+```powershell
+python -m uvicorn main:app --reload
+```
+
+La API estará disponible en:
+
+http://127.0.0.1:8000
+
+La documentación interactiva de FastAPI se encuentra en:
+
+http://127.0.0.1:8000/docs
+
+### 6. Iniciar el frontend
+
+Abrir otra terminal y ejecutar:
 
 ```powershell
 cd frontend
@@ -70,35 +139,73 @@ npm install
 npm run dev
 ```
 
-La dirección habitual de Vite es:
+La aplicación estará disponible habitualmente en:
 
 http://localhost:5173
 
-## Trabajo en equipo con GitHub
+## Dashboard e indicadores de rendimiento
 
-1. Clonen el repositorio.
-2. Instalen las dependencias siguiendo estas instrucciones.
-3. Configuren sus credenciales locales de Firebase de manera segura.
-4. No suban `.venv`, `node_modules`, claves privadas ni archivos `.env` reales.
-5. Trabajen en ramas y hagan pull requests si el equipo lo necesita.
+El dashboard permite consultar estadísticas generales del sistema y visualizar información sobre los agentes.
 
-## Seguridad
+Entre los indicadores disponibles se encuentran:
 
-- Nunca subir `backend/serviceAccountKey.json`.
-- No copiar credenciales privadas a este README, a issues o a commits.
-- Si una clave privada se subió por accidente, revocarla y generar una nueva.
-- Compartir acceso al proyecto Firebase solo con integrantes autorizados y con permisos mínimos necesarios.
+- Agente con menor tiempo de ejecución.
+- Agente con mayor tiempo de ejecución.
+- Ahorro teórico asociado a la ejecución concurrente.
+- Speedup estimado.
+- Eficiencia del tramo paralelo.
 
-## Estructura esperada
+Los indicadores calculados a partir de tiempos promedio son estimaciones teóricas. No representan por sí solos una comparación experimental entre una ejecución completamente secuencial y otra concurrente.
+
+## Estructura del proyecto
 
 ```text
 proyecto-concurrente/
+│
 ├── backend/
 │   ├── main.py
 │   ├── requirements.txt
 │   ├── .env.example
-│   └── serviceAccountKey.json   # local, no se sube
+│   ├── serviceAccountKey.json
+│   └── .venv/
+│
 ├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   └── index.css
+│   ├── package.json
+│   └── vite.config.js
+│
 ├── .gitignore
 └── README.md
 ```
+
+Algunos elementos de la estructura, como `.venv`, `node_modules` y `serviceAccountKey.json`, son locales y no deben incorporarse al repositorio.
+
+## Trabajo en equipo
+
+Para colaborar en el proyecto:
+
+1. Clonar el repositorio.
+2. Instalar las dependencias del backend y frontend.
+3. Configurar las credenciales locales de Firebase.
+4. Instalar Ollama y descargar los modelos requeridos.
+5. Crear ramas para desarrollar nuevas funcionalidades.
+6. Integrar los cambios mediante commits y pull requests.
+
+## Seguridad
+
+- No subir `serviceAccountKey.json` a GitHub.
+- No publicar claves privadas ni credenciales.
+- No subir carpetas `.venv` o `node_modules`.
+- No compartir archivos `.env` con información sensible.
+- Si una credencial se publica accidentalmente, revocarla y generar una nueva.
+- Conceder acceso a Firebase únicamente a integrantes autorizados.
+
+## Objetivo académico
+
+El objetivo del proyecto es demostrar la aplicación práctica de conceptos de **concurrencia, paralelismo, sincronización y coordinación de tareas**, integrándolos con herramientas actuales de desarrollo web e inteligencia artificial.
+
+Además, busca analizar cómo la ejecución concurrente de procesos especializados puede mejorar el aprovechamiento de los recursos y reducir los tiempos de procesamiento.
