@@ -399,7 +399,7 @@ const parallelEfficiency =llamaTime != null &&qwenTime != null &&Math.max(llamaT
               <pre>{result}</pre>
             </article>
           ))}
-// Sección de tiempos de ejecución y errores
+
           <h2>Tiempos de ejecución</h2>
 
           {Object.entries(task.agent_elapsed_seconds || {}).map(

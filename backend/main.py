@@ -1,4 +1,3 @@
-
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -6,21 +5,16 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from time import perf_counter
 from uuid import uuid4
-
 import firebase_admin
 import ollama
 from firebase_admin import credentials, firestore
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-
-
 # --------------------------------------------------
 # 1. CONFIGURACIÓN Y LOGS
 # --------------------------------------------------
-
 BASE_DIR = Path(__file__).resolve().parent
-
 KEY_PATH = Path(
     os.getenv("FIREBASE_KEY", str(BASE_DIR / "serviceAccountKey.json"))
 ).expanduser()
@@ -31,12 +25,9 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
-
 # --------------------------------------------------
 # 2. FIREBASE / FIRESTORE
 # --------------------------------------------------
-
 if not firebase_admin._apps:
     if not KEY_PATH.is_file():
         raise FileNotFoundError(
@@ -51,11 +42,9 @@ if not firebase_admin._apps:
 db = firestore.client()
 tasks_collection = db.collection("tasks")
 
-
 # --------------------------------------------------
-# 3. EXECUTOR Y CICLO DE VIDA
+# 3. EJECUTOR de la pool de hilos Y CICLO DE VIDA
 # --------------------------------------------------
-
 executor = ThreadPoolExecutor(
     max_workers=3,
     thread_name_prefix="agente-ia",
@@ -86,20 +75,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # --------------------------------------------------
 # 4. MODELO DE ENTRADA
 # --------------------------------------------------
-
 class TaskRequest(BaseModel):
     text: str = Field(min_length=1, max_length=10000)
-
-
-
 # --------------------------------------------------
 # 5. PROCESAMIENTO DE AGENTES
 # --------------------------------------------------
-
 def process_task(task_id: str):
     """Ejecuta los agentes y reduce las escrituras a Firestore."""
 
@@ -171,7 +154,7 @@ def process_task(task_id: str):
             response = ollama.generate(
                 model="llama3.2:1b",
                 prompt=(
-                    "Resumí la solicitud del usuario en español. "
+                    "Resumí la solicitud del usuario "
                     "Identificá el objetivo principal y los requisitos. "
                     "Si solicita código, describí qué debe hacer "
                     "el programa sin generar la solución completa. "
@@ -234,14 +217,13 @@ def process_task(task_id: str):
 
             def review_code():
                 prompt = f"""  Sos un revisor de codigo Python con criterio tecnico estricto.
-                        Responde en español.
+                        Responde.
 
                         REQUERIMIENTO ORIGINAL:
                         {text_value}
 
                         CODIGO A REVISAR:
                         {results["codigo"]}
-
                         Indica:
                         1. Si el codigo cumple con el requerimiento.
                         2. Si hay errores , problemas de seguridad o malas prácticas.
@@ -267,11 +249,9 @@ def process_task(task_id: str):
                 "No se pudo revisar el código porque falló "
                 "su generación."
             )
-
         # 8. Guardar todo junto al finalizar.
         elapsed = round(perf_counter() - start, 3)
         final_status = "completada" if not errors else "con errores"
-
         referencia.update({
             "results": results.copy(),
             "resultados_parciales": results.copy(),
@@ -280,21 +260,17 @@ def process_task(task_id: str):
             "elapsed_seconds": elapsed,
             "status": final_status,
         })
-
         logger.info(
             "Tarea %s finalizada con estado '%s' en %.3f segundos",
             task_id,
             final_status,
             elapsed,
         )
-
     except Exception as exc:
         elapsed = round(perf_counter() - start, 3)
-
         logger.exception(
             "Error general al procesar la tarea %s", task_id
         )
-
         try:
             referencia.update({
                 "status": "con errores",
@@ -312,14 +288,9 @@ def process_task(task_id: str):
                 "No se pudo guardar el error final de la tarea %s",
                 task_id,
             )
-
-
-
 # --------------------------------------------------
 # 6. ENDPOINTS
 # --------------------------------------------------
-
-
 @app.get("/stats")
 def get_stats():
     try:
@@ -414,8 +385,6 @@ def get_stats():
 @app.get("/")
 def home():
     return {"message": "API concurrente funcionando"}
-
-
 @app.post("/tasks", status_code=202)
 def create_task(
     request: TaskRequest,
@@ -450,8 +419,6 @@ def create_task(
     logger.info("Tarea %s creada", task_id)
 
     return {"id": task_id, "status": "pendiente"}
-
-
 @app.get("/tasks/{task_id}")
 def get_task(task_id: str):
     try:
@@ -472,12 +439,9 @@ def get_task(task_id: str):
         )
 
     return documento.to_dict()
-
-
 @app.get("/test-firestore")
 def test_firestore():
     referencia = db.collection("pruebas").document("conexion")
-
     try:
         referencia.set({
             "mensaje": "Conexión exitosa",
@@ -485,12 +449,10 @@ def test_firestore():
         })
 
         documento = referencia.get()
-
         return {
             "ok": documento.exists,
             "datos": documento.to_dict(),
         }
-
     except Exception as exc:
         logger.exception("Error probando Firestore")
 
