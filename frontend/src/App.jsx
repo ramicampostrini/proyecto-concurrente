@@ -37,43 +37,29 @@ function App() {
       );
     }
   }
-
-  useEffect(() => {
-    loadStats();
-
-    const interval = setInterval(loadStats, 10000);
-    return () => clearInterval(interval);
-  }, []);
 // Función para enviar la tarea al backend y manejar su estado desde la documentación de la API, incluyendo la espera de su finalización o error, y la actualización de las estadísticas.
   async function submitTask(event) {
     event.preventDefault();
     setLoading(true);
     setError("");
     setTask(null);
-
     try {
       const response = await fetch(`${API}/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       });
-
       if (!response.ok) {
         throw new Error("No se pudo crear la tarea");
       }
-
       const data = await response.json();
       await checkTask(data.id);
-      await loadStats();
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Ocurrió un error inesperado"
+        err instanceof Error? err.message: "Ocurrió un error inesperado"
       );
     } finally {
       setLoading(false);
-      loadStats();
     }
   }
 // Función para consultar el estado de la tarea hasta que se complete o falle, con un límite de tiempo de 5 minutos
