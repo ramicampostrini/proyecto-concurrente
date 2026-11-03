@@ -148,23 +148,19 @@ def process_task(task_id: str):
         })
 
         logger.info("Tarea %s iniciada", task_id)
-
         # 3. Agente de resumen
         def summarize():
             response = ollama.generate(
                 model="llama3.2:1b",
                 prompt=(
-                    "Resumí la solicitud del usuario "
-                    "Identificá el objetivo principal y los requisitos. "
-                    "Si solicita código, describí qué debe hacer "
-                    "el programa sin generar la solución completa. "
-                    "No inventes información. Si el pedido es ambiguo, "
-                    "indicá brevemente qué no está claro.\n\n"
+                    "Resumí la solicitud, identificá su objetivo y requisitos. "
+                    "Si pide código, describí qué debe hacer sin resolverlo. "
+                    "No inventes información y señalá brevemente cualquier ambigüedad.\n\n"
                     f"Solicitud:\n{text_value}"
                 ),
             )
-            return response["response"]
 
+            return response["response"]
         # 4. Agente de generación de código
         def generate_code():
             response = ollama.generate(
