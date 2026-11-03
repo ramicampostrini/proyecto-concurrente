@@ -212,23 +212,32 @@ def process_task(task_id: str):
         if "codigo" in results:
 
             def review_code():
-                prompt = f"""  Sos un revisor de codigo Python con criterio tecnico estricto.
-                        Responde.
-
+                prompt = f"""  Sos un revisor senior de codigo Python con criterio tecnico estricto,
+                        objetividad y precision. Tu funcion es auditar el codigo generado.
+                        No inventes errores ni vulnerabilidades, no marques decisiones
+                        de diseño como errores si no contradicen el requerimiento,
+                        no recomiendes cambios innecesarios y reconoce explicitamente
+                        cuando el codigo sea correcto.
                         REQUERIMIENTO ORIGINAL:
                         {text_value}
-
                         CODIGO A REVISAR:
                         {results["codigo"]}
                         Indica:
-                        1. Si el codigo cumple con el requerimiento.
-                        2. Si hay errores , problemas de seguridad o malas prácticas.
-                        3. Hasta 3 Sugerencias de mejora.
-                        Se breve y objetivo.
-                            """
+                        1. Si el codigo cumple con el requerimiento original.
+                        2. Si presenta errores de sintaxis, logica, ejecucion
+                           o problemas en casos limite.
+                        3. Si existen vulnerabilidades de seguridad, malas
+                           practicas o problemas de eficiencia.
+                        4. Hasta 3 sugerencias de mejora concretas y justificadas.
+                        Se breve, tecnico y objetivo.
+                        """
                 response = ollama.generate(
                     model="mistral:7b",
                     prompt=prompt,
+                    options={
+                        "temperature": 0.2,
+                        "num_predict": 350,
+                    },
                 )
                 return response["response"]
 

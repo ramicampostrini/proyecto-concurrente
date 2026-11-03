@@ -99,6 +99,7 @@ pre {
   padding: 14px;
   border-radius: 8px;
   overflow-x: auto;
+  text-align: left;
 }
 
 .error {
@@ -123,6 +124,7 @@ section > p {
 /* DASHBOARD */
 
 .dashboard-header {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -132,6 +134,7 @@ section > p {
 
 .dashboard-header > div {
   flex: 1;
+  padding-inline: 200px;
 }
 
 .eyebrow {
@@ -147,6 +150,9 @@ section > p {
 }
 
 .refresh-button {
+  position: absolute;          
+  top: 0;                      
+  right: 0;
   flex-shrink: 0;
   margin-top: 0;
 }
@@ -310,5 +316,14 @@ section > p {
 @media (max-width: 700px) {
   .performance-grid {
     grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 900px) {
+  .dashboard-header > div {
+    padding-inline: 0;
+  }
+
+  .refresh-button {
+    position: static;
   }
 }

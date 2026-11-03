@@ -11,7 +11,11 @@ import {
   Tooltip,
 } from "recharts";
 const API = "http://127.0.0.1:8000";
-
+const AGENT_LABELS = {
+  resumen: "Llama 3.2 (resumen)",
+  codigo: "Qwen 2.5 Coder (código)",
+  revision: "Mistral 7B (revisión)",
+};
 function App() {
   const [text, setText] = useState("");
   const [task, setTask] = useState(null);
@@ -37,6 +41,10 @@ function App() {
       );
     }
   }
+  useEffect(() => {
+    loadStats();
+  }, []);
+  
 // Función para enviar la tarea al backend y manejar su estado desde la documentación de la API, incluyendo la espera de su finalización o error, y la actualización de las estadísticas.
   async function submitTask(event) {
     event.preventDefault();
@@ -62,9 +70,9 @@ function App() {
       setLoading(false);
     }
   }
-// Función para consultar el estado de la tarea hasta que se complete o falle, con un límite de tiempo de 5 minutos
+  // Consulta el estado de la tarea durante un máximo aproximado de 15 minutos.
   async function checkTask(id) {
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 180; i++) {
       const response = await fetch(`${API}/tasks/${id}`);
 
       if (!response.ok) {
@@ -85,7 +93,7 @@ function App() {
     }
 
     throw new Error(
-      "La consulta superó los cinco minutos. La tarea podría seguir procesándose."
+      "La consulta superó los quince minutos. La tarea podría seguir procesándose."
     );
   }
 // Formatea el tiempo en segundos a un string con dos decimales y "s" al final
@@ -207,31 +215,31 @@ const parallelEfficiency =llamaTime != null &&qwenTime != null &&Math.max(llamaT
         {parallelSaving != null? `${parallelSaving.toFixed(2)} s`: "Sin datos"}
       </strong>
       <p>
-        {parallelSavingPercent != null? `${parallelSavingPercent.toFixed(1)}% del tiempo combinado de Llama y Qwen.`: "Se necesitan datos de ambos agentes."}
-      </p>
+      {parallelSavingPercent != null? `${parallelSavingPercent.toFixed(1)}% del tiempo combinado de Llama y Qwen. Estimación sobre promedios, no una medición.`: "Se necesitan datos de ambos agentes."}
+    </p>
     </article>
     <article className="performance-card">
       <span>Speedup estimado</span>
       <strong>
-        {speedup != null
-          ? `${speedup.toFixed(2)}x`
-          : "Sin datos"}
+        {speedup != null? `${speedup.toFixed(2)}x` : "Sin datos"}
       </strong>
       <p>
-        Aceleración estimada respecto a ejecutar los tres agentes
-        secuencialmente.
+      Estimación calculada con tiempos promedio. No reemplaza una
+      comparación medida entre ejecución secuencial y concurrente.
       </p>
     </article>
     <article className="performance-card">
-      <span>Eficiencia paralela</span>
+      <span>Eficiencia Concurrente</span>
       <strong>
         {parallelEfficiency != null
           ? `${parallelEfficiency.toFixed(1)}%`
           : "Sin datos"}
       </strong>
       <p>
-        Aprovechamiento estimado de los dos agentes que trabajan
-        simultáneamente.
+      <p>
+      Estimación del aprovechamiento de los dos agentes que trabajan
+      simultáneamente, calculada con promedios.
+      </p>
       </p>
     </article>
   </div>
@@ -391,7 +399,7 @@ const parallelEfficiency =llamaTime != null &&qwenTime != null &&Math.max(llamaT
           {Object.entries(task.agent_elapsed_seconds || {}).map(
             ([name, seconds]) => (
               <p key={name}>
-                Tiempo de {name}: {formatTime(seconds)}
+                Tiempo de {AGENT_LABELS[name] ?? name}: {formatTime(seconds)}
               </p>
             )
           )}
