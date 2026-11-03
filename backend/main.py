@@ -3,6 +3,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Literal
 from time import perf_counter
 from uuid import uuid4
 import firebase_admin
@@ -25,6 +26,29 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+# Opciones de generación idénticas para todos los agentes y modos.
+OLLAMA_OPTIONS = {"temperature": 0, "seed": 42}
+OLLAMA_CLIENT = ollama.Client(timeout=900)
+def generate_with_metrics(model, prompt, name, metrics):
+    """Llama a Ollama con las opciones comunes y guarda sus metadatos."""
+    response = OLLAMA_CLIENT.generate(
+        model=model,
+        prompt=prompt,
+        options=OLLAMA_OPTIONS,
+    )
+
+    def to_seconds(value):
+        return round(value / 1e9, 3) if isinstance(value, int) else None
+
+    metrics[name] = {
+        "model": model,
+        "prompt_eval_count": response.get("prompt_eval_count"),
+        "eval_count": response.get("eval_count"),
+        "load_duration_s": to_seconds(response.get("load_duration")),
+        "eval_duration_s": to_seconds(response.get("eval_duration")),
+        "total_duration_s": to_seconds(response.get("total_duration")),
+    }
+    return response["response"]
 # --------------------------------------------------
 # 2. FIREBASE / FIRESTORE
 # --------------------------------------------------
@@ -80,6 +104,7 @@ app.add_middleware(
 # --------------------------------------------------
 class TaskRequest(BaseModel):
     text: str = Field(min_length=1, max_length=10000)
+    mode: Literal["concurrent", "sequential"] = "concurrent"
 # --------------------------------------------------
 # 5. PROCESAMIENTO DE AGENTES
 # --------------------------------------------------
@@ -92,6 +117,7 @@ def process_task(task_id: str):
     results = {}
     errors = {}
     agent_elapsed_seconds = {}
+    agent_metrics = {}
 
     def run_agent(name, function):
         agent_start = perf_counter()
@@ -136,7 +162,10 @@ def process_task(task_id: str):
             return
 
         task_data = documento.to_dict()
+
         text_value = task_data["text"]
+        mode = task_data.get("mode", "concurrent")
+        logger.info("Tarea %s: modo de ejecución '%s'", task_id, mode)
 
         # 2. Marcar el inicio
         referencia.update({
@@ -151,9 +180,9 @@ def process_task(task_id: str):
 
         # 3. Agente de resumen
         def summarize():
-            response = ollama.generate(
-                model="llama3.2:1b",
-                prompt=(
+            return generate_with_metrics(
+                "llama3.2:1b",
+                (
                     "Resumí la solicitud del usuario "
                     "Identificá el objetivo principal y los requisitos. "
                     "Si solicita código, describí qué debe hacer "
@@ -162,14 +191,14 @@ def process_task(task_id: str):
                     "indicá brevemente qué no está claro.\n\n"
                     f"Solicitud:\n{text_value}"
                 ),
+                "resumen",
+                agent_metrics,
             )
-            return response["response"]
-
         # 4. Agente de generación de código
         def generate_code():
-            response = ollama.generate(
-                model="qwen2.5-coder:1.5b",
-                prompt=(
+            return generate_with_metrics(
+                "qwen2.5-coder:1.5b",
+                (
                     "Sos un programador Python. Generá código que "
                     "resuelva el siguiente requerimiento. "
                     "Incluí el código completo, imports necesarios "
@@ -178,33 +207,46 @@ def process_task(task_id: str):
                     "Devolvé el código en un bloque Markdown.\n\n"
                     f"Requerimiento:\n{text_value}"
                 ),
+                "codigo",
+                agent_metrics,
             )
-            return response["response"]
-
+        pipeline_start = perf_counter()
         # 5. Ejecutar resumen y código en paralelo
         jobs = {
             "resumen": summarize,
             "codigo": generate_code,
         }
 
-        futures = {
-            executor.submit(run_agent, name, function): name
-            for name, function in jobs.items()
-        }
+        stage1_start = perf_counter()
 
-        for future in as_completed(futures):
-            name = futures[future]
+        if mode == "sequential":
+            for name, function in jobs.items():
+                try:
+                    results[name] = run_agent(name, function)
+                except Exception as exc:
+                    errors[name] = str(exc)
+        else:
+            futures = {
+                executor.submit(run_agent, name, function): name
+                for name, function in jobs.items()
+            }
 
-            try:
-                results[name] = future.result()
-            except Exception as exc:
-                errors[name] = str(exc)
+            for future in as_completed(futures):
+                name = futures[future]
+
+                try:
+                    results[name] = future.result()
+                except Exception as exc:
+                    errors[name] = str(exc)
+
+        stage1_elapsed = round(perf_counter() - stage1_start, 3)
 
         # 6. Una escritura conjunta de los resultados parciales
         referencia.update({
             "resultados_parciales": results.copy(),
             "errors": errors.copy(),
             "agent_elapsed_seconds": agent_elapsed_seconds.copy(),
+            "stage1_elapsed_seconds": stage1_elapsed,
         })
 
         logger.info(
@@ -230,25 +272,24 @@ def process_task(task_id: str):
                         3. Hasta 3 Sugerencias de mejora.
                         Se breve y objetivo.
                             """
-                response = ollama.generate(
-                    model="mistral:7b",
-                    prompt=prompt,
+                return generate_with_metrics(
+                    "mistral:7b",
+                    prompt,
+                    "revision",
+                    agent_metrics,
                 )
-                return response["response"]
-
             try:
                 results["revision"] = run_agent(
                     "revision", review_code
                 )
-
             except Exception as exc:
                 errors["revision"] = str(exc)
-
         else:
             errors["revision"] = (
                 "No se pudo revisar el código porque falló "
                 "su generación."
             )
+        pipeline_elapsed = round(perf_counter() - pipeline_start, 3)
         # 8. Guardar todo junto al finalizar.
         elapsed = round(perf_counter() - start, 3)
         final_status = "completada" if not errors else "con errores"
@@ -259,6 +300,8 @@ def process_task(task_id: str):
             "agent_elapsed_seconds": agent_elapsed_seconds.copy(),
             "elapsed_seconds": elapsed,
             "status": final_status,
+            "pipeline_elapsed_seconds": pipeline_elapsed,
+            "agent_metrics": agent_metrics.copy(),
         })
         logger.info(
             "Tarea %s finalizada con estado '%s' en %.3f segundos",
@@ -395,6 +438,7 @@ def create_task(
     task_data = {
         "id": task_id,
         "text": request.text,
+        "mode": request.mode,
         "status": "pendiente",
         "results": {},
         "errors": {},

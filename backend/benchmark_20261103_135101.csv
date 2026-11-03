@@ -1,0 +1,7 @@
+run,prompt_id,mode,task_id,status,stage1_s,pipeline_s,elapsed_s,resumen_s,resumen_eval_count,resumen_tok_s,resumen_load_s,codigo_s,codigo_eval_count,codigo_tok_s,codigo_load_s,revision_s,revision_eval_count,revision_tok_s,revision_load_s,cold_start
+1,1,sequential,e5282fe0-8ee6-45f7-bf24-ce1623cbbb7b,completada,28.874,140.465,140.597,18.884,401,21.33,0.013,9.989,272,27.45,0.011,111.451,644,6.56,0.017,False
+2,1,concurrent,d06aae63-7f4e-4dd2-8d1e-bef8f05def0c,completada,26.104,106.118,106.306,26.104,401,15.42,0.01,21.424,272,12.78,0.01,79.944,568,7.12,0.005,False
+3,1,concurrent,0ed07aec-7d97-441b-a951-9b4019b1df85,completada,26.451,102.619,102.752,26.45,401,15.22,0.009,21.937,272,12.47,0.011,76.098,568,7.48,0.006,False
+4,1,sequential,f24f9ffd-29ec-4a11-be43-98a0b625a80d,completada,23.795,97.923,98.047,15.428,401,26.14,0.009,8.366,272,32.72,0.006,74.012,568,7.69,0.008,False
+5,1,sequential,20837dd2-2834-482a-bbba-40e725327577,completada,23.786,98.069,98.216,15.488,401,25.99,0.006,8.297,272,32.98,0.006,74.199,568,7.68,0.006,False
+6,1,concurrent,d5b8617c-0015-4e2c-b63e-0145ad0bb3e3,completada,24.335,98.956,99.078,24.335,401,16.54,0.007,19.492,272,14.03,0.008,74.552,568,7.64,0.008,False
