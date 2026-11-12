@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
 import {
@@ -41,7 +41,10 @@ function App() {
       );
     }
   }
+  const statsLoaded = useRef(false);
   useEffect(() => {
+    if (statsLoaded.current) return;
+    statsLoaded.current = true;
     loadStats();
   }, []);
   
@@ -236,10 +239,8 @@ const parallelEfficiency =llamaTime != null &&qwenTime != null &&Math.max(llamaT
           : "Sin datos"}
       </strong>
       <p>
-      <p>
       Estimación del aprovechamiento de los dos agentes que trabajan
       simultáneamente, calculada con promedios.
-      </p>
       </p>
     </article>
   </div>
