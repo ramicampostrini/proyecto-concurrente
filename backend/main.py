@@ -1,7 +1,6 @@
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from threading import BoundedSemaphore
 from contextlib import asynccontextmanager
 from pathlib import Path
 from time import perf_counter
@@ -47,7 +46,7 @@ tasks_collection = db.collection("tasks")
 # 3. EJECUTOR de la pool de hilos Y CICLO DE VIDA
 # --------------------------------------------------
 executor = ThreadPoolExecutor(max_workers=3,thread_name_prefix="agente-ia",)
-task_semaphore = BoundedSemaphore(1)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
