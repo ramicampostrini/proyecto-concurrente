@@ -23,6 +23,8 @@ function App() {
   const [error, setError] = useState("");
   const [stats, setStats] = useState(null);
   const [statsError, setStatsError] = useState("");
+  const [tasks, setTasks] = useState([]);
+  const [historyError, setHistoryError] = useState("");
 // Función para cargar las estadísticas desde el backend y manejar errores
   async function loadStats() {
     try {
@@ -41,12 +43,36 @@ function App() {
       );
     }
   }
-  const statsLoaded = useRef(false);
-  useEffect(() => {
-    if (statsLoaded.current) return;
-    statsLoaded.current = true;
-    loadStats();
-  }, []);
+  // Consulta el historial de tareas almacenadas en Firestore.
+async function loadTasks() {
+  try {
+    const response = await fetch(`${API}/tasks`);
+
+    if (!response.ok) {
+      throw new Error("No se pudo cargar el historial de tareas");
+    }
+
+    const data = await response.json();
+
+    setTasks(data.tasks);
+    setHistoryError("");
+  } catch (err) {
+    setHistoryError(
+      err instanceof Error
+        ? err.message
+        : "Error al cargar el historial"
+    );
+  }
+}
+const statsLoaded = useRef(false);
+
+useEffect(() => {
+  if (statsLoaded.current) return;
+  statsLoaded.current = true;
+
+  loadStats();
+  loadTasks();
+}, []);
   
 // Función para enviar la tarea al backend y manejar su estado desde la documentación de la API, incluyendo la espera de su finalización o error, y la actualización de las estadísticas.
   async function submitTask(event) {
@@ -191,6 +217,79 @@ const parallelEfficiency =llamaTime != null &&qwenTime != null &&Math.max(llamaT
           </article>
         </div>
       </section>
+      <section className="history-section">
+  <h2>Historial de tareas</h2>
+  <p>Consultá las solicitudes que fueron procesadas por el sistema.</p>
+
+  {historyError && <p className="error">{historyError}</p>}
+
+  <button className="refresh-button" onClick={loadTasks}>
+    Actualizar historial
+  </button>
+
+  {tasks.length === 0 ? (
+    <p>No hay tareas registradas.</p>
+  ) : (
+    <div className="history-table-container">
+      <table className="history-table">
+        <thead>
+          <tr>
+            <th>Solicitud</th>
+            <th>Estado</th>
+            <th>Fecha de creación</th>
+            <th>Tiempo</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {tasks.map((item) => (
+            <tr key={item.id}>
+              <td>{item.text}</td>
+
+              <td>{item.status}</td>
+
+              <td>
+                {item.created_at
+                  ? new Date(item.created_at).toLocaleString("es-AR")
+                  : "Fecha no disponible"}
+              </td>
+
+              <td>{formatTime(item.elapsed_seconds)}</td>
+
+              <td>
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(
+                        `${API}/tasks/${item.id}`
+                      );
+
+                      if (!response.ok) {
+                        throw new Error("No se pudo consultar la tarea");
+                      }
+
+                      const data = await response.json();
+                      setTask(data);
+                    } catch (err) {
+                      setHistoryError(
+                        err instanceof Error
+                          ? err.message
+                          : "Error al consultar la tarea"
+                      );
+                    }
+                  }}
+                >
+                  Ver resultados
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</section>
   <section className="performance-section">
   <h2>Indicadores de rendimiento</h2>
   <div className="performance-grid">
@@ -378,9 +477,7 @@ const parallelEfficiency =llamaTime != null &&qwenTime != null &&Math.max(llamaT
             )}
           </article>
 
-          {Object.entries(
-            task.resultados_parciales || task.results || {}
-          ).map(([name, result]) => (
+          {Object.entries( task.resultados || task.resultados_parciales || task.results || {}).map(([name, result]) => (
             <article key={name}>
               <h3>
                 {name === "resumen"
@@ -391,7 +488,13 @@ const parallelEfficiency =llamaTime != null &&qwenTime != null &&Math.max(llamaT
                   ? "Revisión (Mistral 7B)"
                   : name}
               </h3>
-              <pre>{result}</pre>
+                {name === "codigo" ? (
+                  <pre className="code-block">
+                    <code>{result}</code>
+                  </pre>
+                ) : (
+                  <pre>{result}</pre>
+                )}
             </article>
           ))}
 

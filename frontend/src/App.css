@@ -327,3 +327,100 @@ section > p {
     position: static;
   }
 }
+
+/* HISTORIAL DE TAREAS */
+
+.history-section {
+  margin-bottom: 40px;
+}
+
+.history-section > p {
+  color: #475569;
+  line-height: 1.5;
+}
+
+.history-table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 20px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(23, 55, 107, 0.07);
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.history-table th,
+.history-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+}
+
+.history-table th {
+  background: #f1f5f9;
+  color: #17376b;
+  font-size: 14px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.history-table td {
+  color: #243247;
+  font-size: 14px;
+}
+
+.history-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.history-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.history-table td:first-child {
+  min-width: 250px;
+  max-width: 400px;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.history-table button {
+  margin-top: 0;
+  padding: 9px 13px;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+@media (max-width: 700px) {
+  .history-table th,
+  .history-table td {
+    padding: 11px;
+  }
+}
+/* BLOQUE DE CÓDIGO GENERADO */
+
+.code-block {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 20px;
+  border-radius: 10px;
+  overflow-x: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  border: 1px solid #334155;
+}
+
+.code-block code {
+  font-family: inherit;
+  color: inherit;
+}

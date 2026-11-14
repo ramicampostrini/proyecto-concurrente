@@ -399,6 +399,7 @@ def create_task(
     task_data = {
         "id": task_id,
         "text": request.text,
+        "created_at": firestore.SERVER_TIMESTAMP,
         "status": "pendiente",
         "results": {},
         "errors": {},
@@ -423,6 +424,45 @@ def create_task(
     logger.info("Tarea %s creada", task_id)
 
     return {"id": task_id, "status": "pendiente"}
+@app.get("/tasks")
+def get_tasks():
+    try:
+        documentos = tasks_collection.stream()
+
+        tareas = []
+
+        for documento in documentos:
+            tarea = documento.to_dict() or {}
+
+            tareas.append({
+                "id": tarea.get("id", documento.id),
+                "text": tarea.get("text", ""),
+                "status": tarea.get("status", "desconocido"),
+                "created_at": tarea.get("created_at"),
+                "elapsed_seconds": tarea.get("elapsed_seconds"),
+            })
+
+        # Ordenar de la más reciente a la más antigua.
+        tareas.sort(
+            key=lambda tarea: (
+                tarea["created_at"].timestamp()
+                if tarea["created_at"] else 0
+            ),
+            reverse=True,
+        )
+
+        return {
+            "total": len(tareas),
+            "tasks": tareas,
+        }
+
+    except Exception as exc:
+        logger.exception("Error consultando el historial de tareas")
+
+        raise HTTPException(
+            status_code=500,
+            detail="No se pudo consultar el historial de tareas",
+        ) from exc
 @app.get("/tasks/{task_id}")
 def get_task(task_id: str):
     try:
