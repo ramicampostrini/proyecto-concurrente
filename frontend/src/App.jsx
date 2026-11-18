@@ -155,7 +155,7 @@ useEffect(() => {
   const parallelData =llamaTime != null && qwenTime != null? [
                   { etapa: "Etapa paralela", segundos: Math.max(llamaTime, qwenTime) },
                   ...(mistralTime != null
-                    ? [{ etapa: "Revisión secuencial", segundos: mistralTime }]
+                    ? [{ etapa: "Etapa secuencial", segundos: mistralTime }]
                     : []),
                 ]
               : [];
@@ -171,8 +171,7 @@ const sequentialTime =llamaTime != null && qwenTime != null && mistralTime != nu
 const concurrentTime =llamaTime != null && qwenTime != null && mistralTime != null? Math.max(llamaTime, qwenTime) + mistralTime: null;
 // Speedup: aceleración estimada por concurrencia
 const speedup =sequentialTime != null && concurrentTime > 0? sequentialTime / concurrentTime: null;
-// Eficiencia paralela: porcentaje de aprovechamiento de los agentes que trabajan simultáneamente
-const parallelEfficiency =llamaTime != null &&qwenTime != null &&Math.max(llamaTime, qwenTime) > 0? ((llamaTime + qwenTime) / (2 * Math.max(llamaTime, qwenTime))) * 100: null;
+
 // Renderizado del componente principal
   return (
     <main className="container">
@@ -328,18 +327,6 @@ const parallelEfficiency =llamaTime != null &&qwenTime != null &&Math.max(llamaT
       <p>
       Estimación calculada con tiempos promedio. 
       Un speedup mayor a 1 indica que la ejecución concurrente es más rápida que la secuencial.
-      </p>
-    </article>
-    <article className="performance-card">
-      <span>Eficiencia Concurrente</span>
-      <strong>
-        {parallelEfficiency != null
-          ? `${parallelEfficiency.toFixed(1)}%`
-          : "Sin datos"}
-      </strong>
-      <p>
-      Estimación del aprovechamiento de los dos agentes que trabajan
-      simultáneamente, calculada con promedios.
       </p>
     </article>
   </div>
