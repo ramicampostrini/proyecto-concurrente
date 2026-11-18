@@ -312,7 +312,7 @@ const parallelEfficiency =llamaTime != null &&qwenTime != null &&Math.max(llamaT
     </article>
 
     <article className="performance-card">
-      <span>Ahorro teórico por concurrencia</span>
+      <span>Ahorro por concurrencia</span>
       <strong>
         {parallelSaving != null? `${parallelSaving.toFixed(2)} s`: "Sin datos"}
       </strong>
@@ -326,8 +326,8 @@ const parallelEfficiency =llamaTime != null &&qwenTime != null &&Math.max(llamaT
         {speedup != null? `${speedup.toFixed(2)}x` : "Sin datos"}
       </strong>
       <p>
-      Estimación calculada con tiempos promedio. No reemplaza una
-      comparación medida entre ejecución secuencial y concurrente.
+      Estimación calculada con tiempos promedio. 
+      Un speedup mayor a 1 indica que la ejecución concurrente es más rápida que la secuencial.
       </p>
     </article>
     <article className="performance-card">
@@ -422,7 +422,7 @@ const parallelEfficiency =llamaTime != null &&qwenTime != null &&Math.max(llamaT
         <div className="agents-grid">
           <article className="agent-card">
             <h3>Llama 3.2</h3>
-            <p>Resumen analítico de la solicitud.</p>
+            <p>Resumen de la solicitud.</p>
             <span className="agent-role">Agente de resumen</span>
           </article>
 
